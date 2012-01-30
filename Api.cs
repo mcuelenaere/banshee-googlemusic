@@ -209,7 +209,7 @@ namespace Google.Music
 				if (allTracks.playlist != null)
 					tracks.AddRange(allTracks.playlist);
 				continuationToken = allTracks.continuationToken;
-			} while(continuationToken != null);
+			} while(!string.IsNullOrEmpty(continuationToken));
 			
 			return tracks.ToArray();
 		}
