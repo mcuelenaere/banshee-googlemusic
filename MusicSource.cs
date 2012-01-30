@@ -8,31 +8,6 @@ using Hyena.Collections;
 
 namespace Banshee.GoogleMusic
 {
-	class GmUri : Hyena.SafeUri {
-		public GmUri(string uri) : base(uri) {
-		}
-		
-		public override string ToString ()
-		{
-			Console.WriteLine("Asking for ToString");
-		 	return base.ToString();
-		}
-		
-		public new string AbsolutePath {
-			get {
-				Console.WriteLine("Asking for AbsolutePath");
-				return base.AbsolutePath;
-			}
-		}
-		
-		public new string AbsoluteUri {
-			get {
-				Console.WriteLine("Asking for AbsoluteUri");
-				return base.AbsoluteUri;
-			}
-		}
-	}
-	
 	public class MusicSource : Source, ITrackModelSource
 	{
 		private MemoryTrackListModel trackListModel = new MemoryTrackListModel();
@@ -91,12 +66,6 @@ namespace Banshee.GoogleMusic
 				Uri = new Hyena.SafeUri("gmusic://" + track.id),
 			};
 		}
-		
-		public override bool HasEditableTrackProperties {
-			get {
-				return true;
-			}
-		}
 				
 		public override int Count {
 			get {
@@ -119,18 +88,30 @@ namespace Banshee.GoogleMusic
 			OnUpdated();
 		}
 		
-        public bool HasDependencies {
-			get {
-				return false;
-			}
-		}
-
         public void RemoveTracks (Selection selection) {
 		}
 		
         public void DeleteTracks (Selection selection) {
 		}
-
+		
+		public override string PreferencesPageId {
+			get {
+				return "";
+			}
+		}
+		
+        public bool HasDependencies {
+			get {
+				return false;
+			}
+		}
+		
+		public override bool HasEditableTrackProperties {
+			get {
+				return true;
+			}
+		}
+		
         public bool CanAddTracks {
 			get {
 				return false;

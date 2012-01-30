@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
 namespace Google.Music
-{	
+{
 	[DataContract]
 	class AllTracks
 	{

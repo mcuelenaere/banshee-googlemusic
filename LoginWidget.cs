@@ -1,5 +1,4 @@
 using System.Net;
-using Gtk;
 using Banshee.WebBrowser;
 using Banshee.WebSource;
 
