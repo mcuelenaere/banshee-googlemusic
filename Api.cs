@@ -81,6 +81,7 @@ namespace Google.Music
 		[DataMember] public int track;
 		[DataMember] public long durationMillis;
 		[DataMember] public bool deleted;
+		[DataMember] public string albumDataUrl;
 		[DataMember] public string url;
 		[DataMember] public long creationDate;
 		[DataMember] public int playCount;
