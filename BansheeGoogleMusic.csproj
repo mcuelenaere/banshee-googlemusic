@@ -80,6 +80,10 @@
     <EmbeddedResource Include="GoogleMusic.addin.xml">
       <LogicalName>GoogleMusic.addin.xml</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="favicon.ico">
+      <DeployService-UseProjectRelativePath>true</DeployService-UseProjectRelativePath>
+      <LogicalName>google-music-favicon</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="gtk-gui\generated.cs" />

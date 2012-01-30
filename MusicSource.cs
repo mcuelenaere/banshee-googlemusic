@@ -1,4 +1,5 @@
 using System;
+
 using Banshee.Sources;
 using Banshee.Collection;
 using Banshee.ServiceStack;
@@ -40,6 +41,7 @@ namespace Banshee.GoogleMusic
 		public MusicSource () : base("Google Music", "Google Music", 30)
 		{
 			TypeUniqueId = "google-music";
+			Properties.Set<Gdk.Pixbuf>("Icon.Pixbuf_16", Gdk.Pixbuf.LoadFromResource("google-music-favicon"));
 
 			ServiceManager.PlayerEngine.TrackIntercept += (track) => {
 				if (track != null && track.Uri.Scheme == "gmusic") {
