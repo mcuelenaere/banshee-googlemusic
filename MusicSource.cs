@@ -40,6 +40,7 @@ namespace Banshee.GoogleMusic
 		}
 		
 		private TrackInfo createTrackInfo(Google.Music.Track track) {
+			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
 			return new TrackInfo() {
 				AlbumArtist = track.albumArtist,
 				AlbumTitle = track.title,
@@ -49,12 +50,12 @@ namespace Banshee.GoogleMusic
 				CanSaveToDatabase = false,
 				Comment = track.comment,
 				Composer = track.composer,
-				DateAdded = DateTime.FromFileTimeUtc(track.creationDate),
+				DateAdded = epoch.AddTicks(track.creationDate*10),
 				DiscCount = track.totalDiscs,
 				DiscNumber = track.disc,
 				Duration = TimeSpan.FromMilliseconds(track.durationMillis),
 				Genre = track.genre,
-				LastPlayed = DateTime.FromFileTimeUtc(track.lastPlayed),
+				LastPlayed = epoch.AddTicks(track.lastPlayed*10),
 				MediaAttributes = TrackMediaAttributes.AudioStream | TrackMediaAttributes.Music,
 				MimeType = "audio/mp3",
 				PlayCount = track.playCount,
@@ -66,7 +67,7 @@ namespace Banshee.GoogleMusic
 				Uri = new Hyena.SafeUri("gmusic://" + track.id),
 			};
 		}
-				
+		
 		public override int Count {
 			get {
 				return trackListModel.Count;
