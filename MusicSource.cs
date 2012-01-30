@@ -121,7 +121,7 @@ namespace Banshee.GoogleMusic
 		
         public bool CanRemoveTracks {
 			get {
-				return true;
+				return false;
 			}
 		}
 		
