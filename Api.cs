@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+using System.Web;
 
 namespace Google.Music
 {
@@ -180,15 +182,35 @@ namespace Google.Music
 			}
 		}
 		
-		public Track[] GetTracks()
+		private AllTracks GetTracks(string postdata)
 		{
 			string url = string.Format(URL_LOAD_ALL_TRACKS, GetXtCookie());
-			WebRequest request = MakeRequest(url, "json={}");
+			WebRequest request = MakeRequest(url, postdata);
 			WebResponse response = request.GetResponse();
 			using (var stream = response.GetResponseStream()) {
 				var tracks = Unserialize<AllTracks>(stream);
-				return tracks.playlist;
+				return tracks;
 			}
+		}
+
+		private string generateJson(string jsonData)
+		{
+			return "json=" + HttpUtility.UrlEncode(jsonData);
+		}
+		
+		public Track[] GetTracks()
+		{
+			var tracks = new List<Track>();
+			string continuationToken = null;
+			do {
+				var postdata = "{" + (continuationToken == null ? "" : "\"continuationToken\":\"" + continuationToken + "\"") + "}";
+				var allTracks = GetTracks(generateJson(postdata));
+				if (allTracks.playlist != null)
+					tracks.AddRange(allTracks.playlist);
+				continuationToken = allTracks.continuationToken;
+			} while(continuationToken != null);
+			
+			return tracks.ToArray();
 		}
 		
 		public string PlayTrack(Track track)
