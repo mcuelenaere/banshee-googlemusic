@@ -13,7 +13,6 @@ namespace Banshee.GoogleMusic
 			new Cookie("APISID", "", "/", ".google.com"),
 			new Cookie("SAPISID", "", "/", ".google.com"),
 			new Cookie("sjsaid", "", "/", "music.google.com"),
-			new Cookie("sjpref", "", "/music", "music.google.com"),
 			new Cookie("xt", "", "/music", "music.google.com"),
 		};
 		
