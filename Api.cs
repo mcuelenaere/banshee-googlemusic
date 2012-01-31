@@ -129,10 +129,8 @@ namespace Google.Music
 
 		private CookieCollection cookies = new CookieCollection();
 		
-		public Api(Cookie[] cookies)
+		public Api()
 		{
-			foreach (Cookie cookie in cookies)
-				this.cookies.Add(cookie);
 		}
 		
 		private WebRequest MakeRequest(string url, string postdata)
@@ -197,6 +195,12 @@ namespace Google.Music
 		private string generateJson(string jsonData)
 		{
 			return "json=" + HttpUtility.UrlEncode(jsonData);
+		}
+		
+		public void SetCookies(Cookie[] cookies)
+		{
+			foreach (Cookie cookie in cookies)
+				this.cookies.Add(cookie);
 		}
 		
 		public Track[] GetTracks()

@@ -15,6 +15,8 @@ namespace Banshee.GoogleMusic
 		
 		public MusicSource () : base("Google Music", "Google Music", 30)
 		{
+			api = new Google.Music.Api();
+			
 			TypeUniqueId = "google-music";
 			Properties.Set<Gdk.Pixbuf>("Icon.Pixbuf_16", Gdk.Pixbuf.LoadFromResource("google-music-favicon"));
 
@@ -31,14 +33,14 @@ namespace Banshee.GoogleMusic
 			var win = new Gtk.Window("Google Music Login");
 			var loginWidget = new LoginWidget();
 			loginWidget.UserLoggedIn += (cookies) => {
-				api = new Google.Music.Api(cookies);
+				api.SetCookies(cookies);
 				Reload();
 				win.Destroy();
 			};
 			win.Add(loginWidget);
 			win.ShowAll();
 		}
-		
+
 		private TrackInfo createTrackInfo(Google.Music.Track track) {
 			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
 			return new TrackInfo() {
