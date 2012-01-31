@@ -46,8 +46,11 @@ namespace Banshee.GoogleMusic
 			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
 			return new TrackInfo() {
 				AlbumArtist = track.albumArtist,
-				AlbumTitle = track.title,
+				AlbumArtistSort = track.albumArtistNorm,
 				ArtistName = track.artist,
+				ArtistNameSort = track.artistNorm,
+				AlbumTitle = track.album,
+				AlbumTitleSort = track.albumNorm,
 				Bpm = track.beatsPerMinute,
 				CanPlay = true,
 				CanSaveToDatabase = false,
@@ -66,6 +69,7 @@ namespace Banshee.GoogleMusic
 				TrackCount = track.totalTracks,
 				TrackNumber = track.track,
 				TrackTitle = track.title,
+				TrackTitleSort = track.titleNorm,
 				Year = track.year,
 				Uri = new Hyena.SafeUri(downloadWrapper.formTrackUrl(track.id)),
 			};
