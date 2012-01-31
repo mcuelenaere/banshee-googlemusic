@@ -8,28 +8,21 @@ using Hyena.Collections;
 
 namespace Banshee.GoogleMusic
 {
-	public class MusicSource : Source, ITrackModelSource
+	public class MusicSource : Source, ITrackModelSource, IDisposable
 	{
 		private MemoryTrackListModel trackListModel = new MemoryTrackListModel();
 		private Google.Music.Api api;
+		private MusicDownloadWrapper downloadWrapper;
 		
 		public MusicSource () : base("Google Music", "Google Music", 30)
 		{
 			api = new Google.Music.Api();
+			downloadWrapper = new MusicDownloadWrapper(api);
+			downloadWrapper.Start();
 			
 			TypeUniqueId = "google-music";
 			Properties.Set<Gdk.Pixbuf>("Icon.Pixbuf_16", Gdk.Pixbuf.LoadFromResource("google-music-favicon"));
 
-			ServiceManager.PlayerEngine.TrackIntercept += (track) => {
-				if (track != null && track.Uri.Scheme == "gmusic") {
-					string trackId = track.Uri.AbsoluteUri.Substring("gmusic://".Length);
-					string url = api.PlayTrack(trackId);
-					track.Uri = new Hyena.SafeUri(url);
-				}
-				
-				return false;
-			};
-			
 			var win = new Gtk.Window("Google Music Login");
 			var loginWidget = new LoginWidget();
 			loginWidget.UserLoggedIn += (cookies) => {
@@ -41,6 +34,11 @@ namespace Banshee.GoogleMusic
 			win.ShowAll();
 		}
 
+		public void Dispose ()
+		{
+			downloadWrapper.Stop();
+		}
+		
 		private TrackInfo createTrackInfo(Google.Music.Track track) {
 			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
 			return new TrackInfo() {
@@ -66,7 +64,7 @@ namespace Banshee.GoogleMusic
 				TrackNumber = track.track,
 				TrackTitle = track.title,
 				Year = track.year,
-				Uri = new Hyena.SafeUri("gmusic://" + track.id),
+				Uri = new Hyena.SafeUri(downloadWrapper.formTrackUrl(track.id)),
 			};
 		}
 		

@@ -68,6 +68,7 @@
     <Compile Include="Api.cs" />
     <Compile Include="LoginWidget.cs" />
     <Compile Include="MusicSource.cs" />
+    <Compile Include="MusicDownloadWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
