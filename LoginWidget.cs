@@ -18,7 +18,7 @@ namespace Banshee.GoogleMusic
 		
 		public LoginWidget()
 		{
-			OssiferSession.CookieChanged += (oldCookie, newCookie) => CookiesChanged();
+			OssiferSession.CookieChanged += CookiesChanged;
 			
 			FullReload();
 		}
@@ -33,7 +33,7 @@ namespace Banshee.GoogleMusic
 			return ret;
 		}
 		
-		private void CookiesChanged()
+		private void CookiesChanged(OssiferCookie oldCookies, OssiferCookie newCookies)
 		{
 			bool allCookiesAreAvailable = true;
 			foreach (Cookie cookie in REQUIRED_COOKIES) {
@@ -48,7 +48,11 @@ namespace Banshee.GoogleMusic
 					Cookie requiredCookie = REQUIRED_COOKIES[i];
 					cookies[i] = fromOssiferCookie(OssiferSession.GetCookie(requiredCookie.Name, requiredCookie.Domain, requiredCookie.Path));
 				}
+				
 				UserLoggedIn(cookies);
+				
+				/* remove self from CookieChanged, so we only alert the user once */
+				OssiferSession.CookieChanged -= CookiesChanged;
 			}
 		}
 		
