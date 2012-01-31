@@ -69,6 +69,7 @@
     <Compile Include="LoginWidget.cs" />
     <Compile Include="MusicSource.cs" />
     <Compile Include="MusicDownloadWrapper.cs" />
+    <Compile Include="AsyncUserJob.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

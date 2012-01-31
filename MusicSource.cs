@@ -27,13 +27,16 @@ namespace Banshee.GoogleMusic
 			var loginWidget = new LoginWidget();
 			loginWidget.UserLoggedIn += (cookies) => {
 				api.SetCookies(cookies);
-				Reload();
+				AsyncUserJob.Create(() => {
+					Reload();
+				}, "Fetching playlist");
+
 				win.Destroy();
 			};
 			win.Add(loginWidget);
 			win.ShowAll();
 		}
-
+		
 		public void Dispose ()
 		{
 			downloadWrapper.Stop();
@@ -82,8 +85,13 @@ namespace Banshee.GoogleMusic
 
         public void Reload () {
 			trackListModel.Clear();
+			int counter = 0;
 			foreach (var track in api.GetTracks()) {
 				trackListModel.Add(createTrackInfo(track));
+				if (counter++ > 50) {
+					OnUpdated(); /* update GUI */
+					counter = 0;
+				}
 			}
 			
 			OnUpdated();
