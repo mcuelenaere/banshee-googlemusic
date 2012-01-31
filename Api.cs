@@ -7,27 +7,10 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Web;
 
+using Hyena.Json;
+
 namespace Google.Music
 {
-	[DataContract]
-	class AllTracks
-	{
-		/*
-		 * {"playlistId":"all",
-		 *  "requestTime":1327756094241000,
-		 *  "continuationToken":"...",
-		 *  "differentialUpdate":false,
-		 *  "playlist":[...],
-		 *  "continuation":false}
-		 */
-		[DataMember] public string playlistId;
-		[DataMember] public long requestTime;
-		[DataMember] public string continuationToken;
-		[DataMember] public bool differentialUpdate;
-		[DataMember] public Track[] playlist;
-		[DataMember] public bool continuation;
-	}
-	
 	[DataContract]
 	public class Track
 	{
@@ -89,33 +72,48 @@ namespace Google.Music
 		[DataMember] public int rating;
 		[DataMember] public string comment;
 	}
-	
-	[DataContract]
-	class PlayUrl
+
+	class Json
 	{
-		/*
-		 * {"url":"..."}
-		 */
-		[DataMember] public string url;
-	}
-	
-	[DataContract]
-	class ModifyEntries
-	{
-		/*
-		 * {"entries":[...]}
-		 */
-		[DataMember] public Track[] entries;
-	}
-	
-	[DataContract]
-	class ModifyEntriesResult
-	{
-		/*
-		 * {"songs":[...],"success":true}
-		 */
-		[DataMember] public Track[] songs;
-		[DataMember] public bool success;
+		private static readonly Deserializer deserializer = new Deserializer();
+		private static readonly Serializer serializer = new Serializer();
+		
+		public static IJsonCollection Unserialize(Stream stream)
+		{
+			deserializer.SetInput(stream);
+			return (IJsonCollection) deserializer.Deserialize();
+		}
+		
+		public static T Unserialize<T>(Stream stream)
+		{
+			var serializer = new DataContractJsonSerializer(typeof(T));
+			return (T) serializer.ReadObject(stream);
+		}
+		
+		public static T Convert<T>(IJsonCollection obj)
+		{
+			/* TODO: can this be done more efficiently? */
+			var serializer = new DataContractJsonSerializer(typeof(T));
+			var textData = obj.ToString();
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(textData))) {
+				return (T) serializer.ReadObject(stream);
+			}
+		}
+		
+		public static string Serialize(object obj)
+		{
+			var serializer = new DataContractJsonSerializer(obj.GetType());
+			using (var stream = new MemoryStream()) {
+				serializer.WriteObject(stream, obj);
+				return Encoding.UTF8.GetString(stream.ToArray());
+			}
+		}
+		
+		public static string Serialize(IJsonCollection obj)
+		{
+			serializer.SetInput(obj);
+			return serializer.Serialize();
+		}
 	}
 	
 	public class Api
@@ -166,35 +164,9 @@ namespace Google.Music
 			return "";
 		}
 		
-		private T Unserialize<T>(Stream stream)
+		private string generateJson(IJsonCollection jsonData)
 		{
-			var serializer = new DataContractJsonSerializer(typeof(T));
-			return (T) serializer.ReadObject(stream);
-		}
-		
-		private string Serialize(object obj)
-		{
-			var serializer = new DataContractJsonSerializer(obj.GetType());
-			using (var stream = new MemoryStream()) {
-				serializer.WriteObject(stream, obj);
-				return Encoding.UTF8.GetString(stream.ToArray());
-			}
-		}
-		
-		private AllTracks GetTracks(string postdata)
-		{
-			string url = string.Format(URL_LOAD_ALL_TRACKS, GetXtCookie());
-			WebRequest request = MakeRequest(url, postdata);
-			WebResponse response = request.GetResponse();
-			using (var stream = response.GetResponseStream()) {
-				var tracks = Unserialize<AllTracks>(stream);
-				return tracks;
-			}
-		}
-
-		private string generateJson(string jsonData)
-		{
-			return "json=" + HttpUtility.UrlEncode(jsonData);
+			return "json=" + HttpUtility.UrlEncode(Json.Serialize(jsonData));
 		}
 		
 		public void SetCookies(Cookie[] cookies)
@@ -203,18 +175,43 @@ namespace Google.Music
 				this.cookies.Add(cookie);
 		}
 		
-		public Track[] GetTracks()
+		private JsonObject GetTracks(string postdata)
 		{
-			var tracks = new List<Track>();
+			string url = string.Format(URL_LOAD_ALL_TRACKS, GetXtCookie());
+			WebRequest request = MakeRequest(url, postdata);
+			WebResponse response = request.GetResponse();
+			using (var stream = response.GetResponseStream())
+				return (JsonObject) Json.Unserialize(stream);
+		}
+		
+		public IEnumerable<Track> GetTracks()
+		{
+			var loopCount = 30; /* don't get stuck in an infinite loop */
 			string continuationToken = null;
 			do {
-				var postdata = "{" + (continuationToken == null ? "" : "\"continuationToken\":\"" + continuationToken + "\"") + "}";
+				var postdata = new JsonObject();
+				if (continuationToken != null)
+					postdata.Add("continuationToken", continuationToken);
+				
 				var allTracks = GetTracks(generateJson(postdata));
-				if (allTracks.playlist != null)
-					tracks.AddRange(allTracks.playlist);
-				continuationToken = allTracks.continuationToken;
-			} while(!string.IsNullOrEmpty(continuationToken));
-			
+				if (allTracks.ContainsKey("playlist")) {
+					var playlist = (JsonArray) allTracks["playlist"];
+					foreach (var track in playlist)
+						yield return Json.Convert<Track>((JsonObject) track);
+				}
+				
+				if (allTracks.ContainsKey("continuationToken"))
+					continuationToken = (string) allTracks["continuationToken"];
+				else
+					continuationToken = null;
+			} while(!string.IsNullOrEmpty(continuationToken) && loopCount-- > 0);
+		}
+		
+		public Track[] GetTracksArray()
+		{
+			var tracks = new List<Track>();
+			foreach (var track in GetTracks())
+				tracks.Add(track);
 			return tracks.ToArray();
 		}
 		
@@ -229,21 +226,29 @@ namespace Google.Music
 			WebRequest request = MakeRequest(url, null);
 			WebResponse response = request.GetResponse();
 			using (var stream = response.GetResponseStream()) {
-				var playUrl = Unserialize<PlayUrl>(stream);
-				return playUrl.url;
+				var playUrl = (JsonObject) Json.Unserialize(stream);
+				if (playUrl.ContainsKey("url"))
+					return (string) playUrl["url"];
+				else
+					return null;
 			}
 		}
 		
 		public bool ModifyEntries(Track[] tracks)
 		{
-			ModifyEntries modifyEntries = new ModifyEntries();
-			modifyEntries.entries = tracks;
+			var modifyEntries = new JsonArray();
+			foreach (var track in tracks)
+				modifyEntries.Add(Json.Serialize(track)); /* FIXME */
+			
 			string url = string.Format(URL_MODIFY_ENTRIES, GetXtCookie());
-			WebRequest request = MakeRequest(url, "json=" + Serialize(modifyEntries));
+			WebRequest request = MakeRequest(url, generateJson(modifyEntries));
 			WebResponse response = request.GetResponse();
 			using (var stream = response.GetResponseStream()) {
-				ModifyEntriesResult result = Unserialize<ModifyEntriesResult>(stream);
-				return result.success;
+				var result = (JsonObject) Json.Unserialize(stream);
+				if (result.ContainsKey("success"))
+					return (bool) result["success"];
+				else
+					return false;
 			}
 		}
 	}
