@@ -28,9 +28,9 @@ namespace Banshee.GoogleMusic
 			loginWidget.UserLoggedIn += (cookies) => {
 				api.SetCookies(cookies);
 				AsyncUserJob.Create(() => {
-					Reload();
+					Refetch();
 				}, "Fetching playlist");
-
+				
 				win.Destroy();
 			};
 			win.Add(loginWidget);
@@ -74,7 +74,7 @@ namespace Banshee.GoogleMusic
 				Uri = new Hyena.SafeUri(downloadWrapper.formTrackUrl(track.id)),
 			};
 		}
-		
+
 		public override int Count {
 			get {
 				return trackListModel.Count;
@@ -86,8 +86,8 @@ namespace Banshee.GoogleMusic
 				return trackListModel;
 			}
 		}
-
-        public void Reload () {
+		
+		private void Refetch () {
 			trackListModel.Clear();
 			int counter = 0;
 			foreach (var track in api.GetTracks()) {
@@ -99,6 +99,9 @@ namespace Banshee.GoogleMusic
 			}
 			
 			OnUpdated();
+		}
+		
+        public void Reload () {
 		}
 		
         public void RemoveTracks (Selection selection) {
