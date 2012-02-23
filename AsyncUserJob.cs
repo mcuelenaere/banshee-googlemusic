@@ -10,21 +10,26 @@ namespace Banshee.GoogleMusic
 	{	
 		public delegate void DelegateJob();
 		
-		private DelegateJob callback;
+		private Thread thread;
 		
-		public AsyncUserJob (DelegateJob callback, string title) : base(title)
+		private AsyncUserJob (DelegateJob callback, string title) : base(title)
 		{
-			this.callback = callback;
-			CanCancel = false;
+			thread = new Thread(delegate() {
+				callback();
+				Finish();
+			});
+			CanCancel = true;
+			CancelRequested += delegate {
+				thread.Abort();
+				Finish();
+				
+			};
 			SetResources(Resource.Cpu);
 		}
 		
 		protected override void RunJob ()
 		{
-			ThreadPool.QueueUserWorkItem((state) => {
-				callback();
-				Finish();
-			});
+			thread.Start();
 		}
 		
 		public static void Create(DelegateJob callback, string title)
