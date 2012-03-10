@@ -12,8 +12,8 @@ namespace Banshee.GoogleMusic
 			new Cookie("SSID", "", "/", ".google.com"),
 			new Cookie("APISID", "", "/", ".google.com"),
 			new Cookie("SAPISID", "", "/", ".google.com"),
-			new Cookie("sjsaid", "", "/", "music.google.com"),
-			new Cookie("xt", "", "/music", "music.google.com"),
+			new Cookie("sjsaid", "", "/music", "play.google.com"),
+			new Cookie("xt", "", "/music", "play.google.com"),
 		};
 		
 		public LoginWidget()
@@ -58,7 +58,7 @@ namespace Banshee.GoogleMusic
 		
 		public override void GoHome()
 		{
-			LoadUri("http://music.google.com");
+			LoadUri("http://play.google.com/music");
 		}
 	}
 }

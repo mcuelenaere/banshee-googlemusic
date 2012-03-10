@@ -118,12 +118,12 @@ namespace Google.Music
 	
 	public class Api
 	{
-		private const string URL_NEW_AND_RECENT = "https://music.google.com/music/services/newandrecent?u=0&xt={0}";
-		private const string URL_LOAD_ALL_TRACKS = "https://music.google.com/music/services/loadalltracks?u=0&xt={0}";
-		private const string URL_GET_STATUS = "https://music.google.com/music/services/getstatus?u=0&xt={0}";
-		private const string URL_MODIFY_ENTRIES = "https://music.google.com/music/services/modifyentries?u=0&xt={0}";
-		private const string URL_PLAY = "https://music.google.com/music/play?u=0&songid={0}&pt=e";
-		private const string URL_RECORD_PLAYING = "https://music.google.com/music/services/recordplaying?u=0&xt={0}";
+		private const string URL_NEW_AND_RECENT = "https://play.google.com/music/services/newandrecent?u=0&xt={0}";
+		private const string URL_LOAD_ALL_TRACKS = "https://play.google.com/music/services/loadalltracks?u=0&xt={0}";
+		private const string URL_GET_STATUS = "https://play.google.com/music/services/getstatus?u=0&xt={0}";
+		private const string URL_MODIFY_ENTRIES = "https://play.google.com/music/services/modifyentries?u=0&xt={0}";
+		private const string URL_PLAY = "https://play.google.com/music/play?u=0&songid={0}&pt=e";
+		private const string URL_RECORD_PLAYING = "https://play.google.com/music/services/recordplaying?u=0&xt={0}";
 
 		private CookieCollection cookies = new CookieCollection();
 		
