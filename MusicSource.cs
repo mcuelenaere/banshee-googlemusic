@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Banshee.Sources;
 using Banshee.Collection;
@@ -8,20 +9,22 @@ using Hyena.Collections;
 
 namespace Banshee.GoogleMusic
 {
-	public class MusicSource : Source, ITrackModelSource, IDisposable
+	public class MusicSource : PrimarySource, IDisposable
 	{
-		private MemoryTrackListModel trackListModel = new MemoryTrackListModel();
+		const int sort_order = 190;
+
 		private Google.Music.Api api;
 		private MusicDownloadWrapper downloadWrapper;
-		
-		public MusicSource () : base("Google Music", "Google Music", 30)
+
+		public MusicSource () : base("Google Music", "Google Music", "google-music", sort_order)
 		{
 			api = new Google.Music.Api();
 			downloadWrapper = new MusicDownloadWrapper(api);
 			downloadWrapper.Start();
 			
-			TypeUniqueId = "google-music";
 			Properties.Set<Gdk.Pixbuf>("Icon.Pixbuf_16", Gdk.Pixbuf.LoadFromResource("google-music-favicon"));
+
+			AfterInitialized();
 
 			var win = new Gtk.Window("Google Music Login");
 			var loginWidget = new LoginWidget();
@@ -36,144 +39,47 @@ namespace Banshee.GoogleMusic
 			win.Add(loginWidget);
 			win.ShowAll();
 		}
-		
-		public void Dispose ()
+
+		~MusicSource()
 		{
-			downloadWrapper.Stop();
-		}
-		
-		private TrackInfo createTrackInfo(Google.Music.Track track) {
-			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, new System.Globalization.GregorianCalendar(), DateTimeKind.Utc);
-			return new TrackInfo() {
-				AlbumArtist = track.albumArtist,
-				AlbumArtistSort = track.albumArtistNorm,
-				ArtistName = track.artist,
-				ArtistNameSort = track.artistNorm,
-				AlbumTitle = track.album,
-				AlbumTitleSort = track.albumNorm,
-				Bpm = track.beatsPerMinute,
-				CanPlay = true,
-				CanSaveToDatabase = false,
-				Comment = track.comment,
-				Composer = track.composer,
-				DateAdded = epoch.AddTicks(track.creationDate*10),
-				DiscCount = track.totalDiscs,
-				DiscNumber = track.disc,
-				Duration = TimeSpan.FromMilliseconds(track.durationMillis),
-				Genre = track.genre,
-				LastPlayed = epoch.AddTicks(track.lastPlayed*10),
-				MediaAttributes = TrackMediaAttributes.AudioStream | TrackMediaAttributes.Music,
-				MimeType = "audio/mp3",
-				PlayCount = track.playCount,
-				Rating = track.rating,
-				TrackCount = track.totalTracks,
-				TrackNumber = track.track,
-				TrackTitle = track.title,
-				TrackTitleSort = track.titleNorm,
-				Year = track.year,
-				Uri = new Hyena.SafeUri(downloadWrapper.formTrackUrl(track.id)),
-			};
+			Dispose ();
 		}
 
-		public override int Count {
-			get {
-				return trackListModel.Count;
-			}
+		public override void Dispose ()
+		{
+			downloadWrapper.Stop();
+			base.Dispose();
 		}
-		
-        public TrackListModel TrackModel {
-			get {
-				return trackListModel;
-			}
+
+		public override bool CanDeleteTracks {
+			get { return false; }
 		}
-		
-		private void Refetch () {
-			trackListModel.Clear();
+
+		public override bool CanAddTracks {
+			get { return false; }
+		}
+
+		private void Refetch ()
+		{
+			PurgeTracks();
+			OnTracksRemoved();
+
 			int counter = 0;
 			foreach (var track in api.GetTracks()) {
-				trackListModel.Add(createTrackInfo(track));
-				if (counter++ > 50) {
-					OnUpdated(); /* update GUI */
+				AddTrack(track);
+				if (counter++ > 100) {
+					OnTracksAdded(); // update GUI
 					counter = 0;
 				}
 			}
 			
-			OnUpdated();
-		}
-		
-        public void Reload () {
-		}
-		
-        public void RemoveTracks (Selection selection) {
-		}
-		
-        public void DeleteTracks (Selection selection) {
-		}
-		
-		public override string PreferencesPageId {
-			get {
-				return "";
-			}
-		}
-		
-        public bool HasDependencies {
-			get {
-				return false;
-			}
-		}
-		
-		public override bool HasEditableTrackProperties {
-			get {
-				return true;
-			}
-		}
-		
-        public bool CanAddTracks {
-			get {
-				return false;
-			}
-		}
-		
-        public bool CanRemoveTracks {
-			get {
-				return false;
-			}
-		}
-		
-        public bool CanDeleteTracks {
-			get {
-				return true;
-			}
-		}
-		
-        public bool ConfirmRemoveTracks {
-			get {
-				return true;
-			}
+			OnTracksAdded();
 		}
 
-        public bool CanRepeat {
-			get {
-				return true;
-			}
-		}
-		
-        public bool CanShuffle {
-			get {
-				return true;
-			}
-		}
-
-        public bool ShowBrowser {
-			get {
-				return true;
-			}
-		}
-		
-        public bool Indexable {
-			get {
-				return false;
-			}
+		private void AddTrack(Google.Music.Track track)
+		{
+			var track_info = new MusicTrack(track, downloadWrapper.formTrackUrl(track.id), this);
+			track_info.Save (false);
 		}
 	}
 }

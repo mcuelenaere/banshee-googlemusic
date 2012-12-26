@@ -70,6 +70,7 @@
     <Compile Include="MusicSource.cs" />
     <Compile Include="MusicDownloadWrapper.cs" />
     <Compile Include="AsyncUserJob.cs" />
+    <Compile Include="MusicTrack.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
